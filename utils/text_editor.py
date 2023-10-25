@@ -14,7 +14,7 @@ class EmptyRestrictor:
 
 
 class Editor:
-    OUTPUT = "Antwort:"
+    OUTPUT = "output:"
     
     def __init__(self, configfile: str):
         """
@@ -65,11 +65,10 @@ class Editor:
                 print(err)
         return data
 
-    def build_prompt(self, input_text: str, prompt_name: str, prompt_instruction: str) -> str:
+    def build_prompt(self, input_text: str, prompt_instruction: str) -> str:
         """
         Defines prompt statement based on prompts defined in the config file.
         :param input_text: input text
-        :param prompt_name: name of prompt instruction
         :param prompt_instruction: instruction of the prompt
         :return: prompt statement including input text
         """
@@ -115,9 +114,7 @@ class Editor:
         
         response_text = response["choices"][0]["text"].split(self.OUTPUT)[-1].encode("utf-8").decode()
         self._history_dict[prompt_name] = response_text
-        restricted_response = self._restrictor.run(response_text)
-        self._history_dict[f"{prompt_name}_restr"] = str(restricted_response[0])
-        return restricted_response[1] if restricted_response[0] else "FAILED"
+        return response_text
 
     def save_history(self, file_name: str):
         """
@@ -138,13 +135,12 @@ class Editor:
         """
         self._history_dict[f"input_text"] = input_text
         for prompt_name, prompt_instruction in self._prompts.items():
-            prompt = self.build_prompt(list(self._history_dict.values())[-1], prompt_name, prompt_instruction)
+            prompt = self.build_prompt(list(self._history_dict.values())[-1], prompt_instruction)
             
             print("############################ PROMPT ##############################")
             print(prompt)
             print("##################################################################")
             
-            self.build_restrictor(prompt_instruction, input_text)
             response = self.get_response(f"{prompt_name}", prompt)
 
         return list(self._history_dict.values())[-1]
